@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="color-scheme" content="light">
+    <title>Luvion Testnet Signing Gate</title>
+    <style>
+      :root {
+        --ink: #181310;
+        --muted: #6f665f;
+        --paper: #f8f6f2;
+        --line: #ded8d1;
+        --gold: #806020;
+        --green: #18724b;
+        --red: #a23e36;
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background: var(--paper);
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; letter-spacing: 0; }
+      button, input { font: inherit; letter-spacing: 0; }
+      .topbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 70px;
+        padding: 12px max(16px, calc((100vw - 720px) / 2));
+        color: #fff;
+        background: #1c1512;
+        border-bottom: 1px solid #3c2f27;
+      }
+      .mark {
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+        color: #1c1512;
+        background: #c9a55c;
+        font-family: Georgia, serif;
+        font-size: 22px;
+        font-weight: 700;
+        transform: rotate(45deg);
+      }
+      .mark span { transform: rotate(-45deg); }
+      .brand { margin: 0; font-family: Georgia, serif; font-size: 19px; }
+      .subbrand { margin: 2px 0 0; color: #b7ada6; font-size: 10px; }
+      .badge {
+        margin-left: auto;
+        padding: 7px 9px;
+        color: #dfc17d;
+        border: 1px solid #6d5428;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 800;
+      }
+      main { width: min(100%, 720px); margin: 0 auto; padding: 32px 14px 28px; }
+      .eyebrow { margin: 0; color: var(--gold); font-size: 11px; font-weight: 800; }
+      h1 { margin: 8px 0 10px; font-family: Georgia, "Songti SC", serif; font-size: 34px; font-weight: 500; }
+      .lede { margin: 0 0 22px; color: var(--muted); font-size: 14px; line-height: 1.65; }
+      .panel {
+        padding: 20px 16px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: 0 12px 32px rgba(42, 32, 24, .06);
+      }
+      h2 { margin: 0 0 5px; font-family: Georgia, "Songti SC", serif; font-size: 19px; }
+      .step-copy { margin: 0 0 14px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+      .divider { height: 1px; margin: 24px 0; background: var(--line); }
+      .label { display: block; margin: 0 0 7px; color: var(--muted); font-size: 11px; font-weight: 700; }
+      input {
+        width: 100%;
+        min-height: 46px;
+        padding: 10px 12px;
+        border: 1px solid #bdb5ae;
+        border-radius: 4px;
+        background: #fbfaf8;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+      }
+      dl { margin: 0; border-top: 1px solid var(--line); }
+      .row {
+        display: grid;
+        grid-template-columns: 90px minmax(0, 1fr);
+        gap: 12px;
+        padding: 11px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      dt { color: var(--muted); font-size: 11px; }
+      dd { margin: 0; font-size: 12px; font-weight: 650; overflow-wrap: anywhere; }
+      code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0; }
+      button {
+        width: 100%;
+        min-height: 50px;
+        margin-top: 12px;
+        padding: 12px 14px;
+        color: #fff;
+        background: var(--ink);
+        border: 0;
+        border-radius: 5px;
+        font-weight: 750;
+      }
+      button.send { background: var(--gold); }
+      button:disabled { color: #eee9e4; background: #aaa19a; }
+      .status {
+        margin: 14px 0 0;
+        padding: 12px;
+        color: #554d46;
+        background: #eeeae5;
+        font-size: 12px;
+        line-height: 1.55;
+      }
+      .status.ok { color: #225a37; background: #e7f2ea; border-left: 4px solid var(--green); }
+      .status.error { color: #7d2e27; background: #f7e8e6; border-left: 4px solid var(--red); }
+      .result { display: none; margin-top: 18px; padding-top: 15px; border-top: 2px solid var(--green); }
+      .result code { display: block; margin: 6px 0 12px; font-size: 11px; overflow-wrap: anywhere; }
+      a { color: var(--gold); font-size: 12px; font-weight: 700; }
+      footer { padding-top: 18px; color: #837970; font-size: 10px; line-height: 1.5; text-align: center; }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="mark" aria-hidden="true"><span>L</span></div>
+      <div>
+        <p class="brand">Luvion Control</p>
+        <p class="subbrand">BSC TESTNET SIGNING GATE</p>
+      </div>
+      <div class="badge">TESTNET ONLY</div>
+    </header>
+
+    <main>
+      <p class="eyebrow">RESTRICTED EXECUTION</p>
+      <h1>Bitget 测试签名</h1>
+      <p class="lede">
+        只核验并提交一笔固定的 BSC 测试网交易。页面不会读取私钥、助记词，也不能发起主网交易。
+      </p>
+
+      <section class="panel">
+        <h2>1. 连接并核验钱包</h2>
+        <p class="step-copy">必须是指定 Bitget 地址和 BSC 测试网 Chain 97。</p>
+        <button id="connect" type="button">连接 Bitget Wallet</button>
+
+        <div class="divider"></div>
+
+        <h2>2. 绑定 Luvion 授权</h2>
+        <p class="step-copy">授权编号用于把链上结果与审批证据对应；没有有效编号时不能发送。</p>
+        <label class="label" for="request">授权编号</label>
+        <input id="request" placeholder="等待新的 64 位授权编号" spellcheck="false" autocapitalize="none">
+
+        <div class="divider"></div>
+
+        <h2>3. 核对并发送</h2>
+        <p class="step-copy">钱包确认页必须与下列固定参数一致。</p>
+        <dl>
+          <div class="row"><dt>金额</dt><dd>1 Test USDT</dd></div>
+          <div class="row"><dt>付款地址</dt><dd><code id="from"></code></dd></div>
+          <div class="row"><dt>收款地址</dt><dd><code id="destination"></code></dd></div>
+          <div class="row"><dt>代币合约</dt><dd><code id="token"></code></dd></div>
+          <div class="row"><dt>主币金额</dt><dd>0 tBNB（仅支付测试网 Gas）</dd></div>
+        </dl>
+
+        <button id="send" class="send" type="button" disabled>在 Bitget Wallet 中确认</button>
+        <div id="status" class="status">请在 Bitget Wallet 的 DApp 浏览器中打开本页。</div>
+
+        <div id="result" class="result">
+          <strong>交易哈希</strong>
+          <code id="hash"></code>
+          <a id="explorer" target="_blank" rel="noreferrer">在 BscScan 测试网查看</a>
+        </div>
+      </section>
+
+      <footer>仅用于 BSC 测试网验收。请勿输入助记词、私钥或主网资产信息。</footer>
+    </main>
+
+    <script>
+      const prepared = Object.freeze({
+        chainId: "0x61",
+        from: "0x9fca228b64dd6db392b54e94ff11931673cb74fc",
+        destination: "0x66ab4ebfef05b7c3222d5a241109a191d30106f5",
+        token: "0x337610d27c682e347c9cd60bd4b3b107c9d34ddd",
+        data: "0xa9059cbb00000000000000000000000066ab4ebfef05b7c3222d5a241109a191d30106f50000000000000000000000000000000000000000000000000de0b6b3a7640000"
+      });
+
+      const elements = {
+        from: document.querySelector("#from"),
+        destination: document.querySelector("#destination"),
+        token: document.querySelector("#token"),
+        request: document.querySelector("#request"),
+        status: document.querySelector("#status"),
+        connect: document.querySelector("#connect"),
+        send: document.querySelector("#send"),
+        result: document.querySelector("#result"),
+        hash: document.querySelector("#hash"),
+        explorer: document.querySelector("#explorer")
+      };
+
+      elements.from.textContent = prepared.from;
+      elements.destination.textContent = prepared.destination;
+      elements.token.textContent = prepared.token;
+      elements.request.value = new URLSearchParams(location.search).get("request")?.trim() || "";
+
+      let provider = null;
+      let verified = false;
+
+      function validAuthorization() {
+        return /^(0x)?[0-9a-fA-F]{64}$/.test(elements.request.value.trim());
+      }
+
+      function syncSend() {
+        elements.send.disabled = !(provider && verified && validAuthorization());
+      }
+
+      function setStatus(message, kind = "") {
+        elements.status.className = `status ${kind}`.trim();
+        elements.status.textContent = message;
+      }
+
+      function getBitgetProvider() {
+        return window.bitkeep?.ethereum
+          || window.bitgetWallet?.ethereum
+          || ((window.ethereum?.isBitKeep || window.ethereum?.isBitgetWallet)
+            ? window.ethereum
+            : null);
+      }
+
+      async function readWallet(activeProvider) {
+        const accounts = await activeProvider.request({ method: "eth_accounts" });
+        const chainId = String(await activeProvider.request({ method: "eth_chainId" })).toLowerCase();
+        return { account: String(accounts?.[0] || "").toLowerCase(), chainId };
+      }
+
+      async function ensureTestnet(activeProvider) {
+        let wallet = await readWallet(activeProvider);
+        if (wallet.chainId === prepared.chainId) return wallet;
+        try {
+          await activeProvider.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: prepared.chainId }]
+          });
+        } catch (error) {
+          if (Number(error?.code) !== 4902) throw error;
+          await activeProvider.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId: prepared.chainId,
+              chainName: "BNB Smart Chain Testnet",
+              nativeCurrency: { name: "Test BNB", symbol: "tBNB", decimals: 18 },
+              rpcUrls: ["https://data-seed-prebsc-1-s1.bnbchain.org:8545"],
+              blockExplorerUrls: ["https://testnet.bscscan.com"]
+            }]
+          });
+        }
+        wallet = await readWallet(activeProvider);
+        if (wallet.chainId !== prepared.chainId) {
+          throw new Error("钱包没有切换到 BSC 测试网（Chain 97）。");
+        }
+        return wallet;
+      }
+
+      elements.request.addEventListener("input", syncSend);
+
+      elements.connect.addEventListener("click", async () => {
+        elements.connect.disabled = true;
+        elements.send.disabled = true;
+        verified = false;
+        try {
+          provider = getBitgetProvider();
+          if (!provider) {
+            throw new Error("未检测到 Bitget Wallet。请把链接粘贴到 Bitget Wallet 的 DApp 浏览器打开。");
+          }
+          setStatus("正在请求钱包账户并核对 BSC 测试网……");
+          await provider.request({ method: "eth_requestAccounts" });
+          const wallet = await ensureTestnet(provider);
+          if (wallet.account !== prepared.from) {
+            throw new Error(`当前钱包 ${wallet.account || "未知地址"} 与授权付款地址不一致。`);
+          }
+          verified = true;
+          syncSend();
+          setStatus(
+            validAuthorization()
+              ? "钱包、地址和 Chain 97 均核验通过。请再次核对交易内容。"
+              : "钱包和 Chain 97 已核验，等待新的 Luvion 授权编号。",
+            "ok"
+          );
+        } catch (error) {
+          provider = null;
+          setStatus(error?.message || String(error), "error");
+        } finally {
+          elements.connect.disabled = false;
+        }
+      });
+
+      elements.send.addEventListener("click", async () => {
+        if (!provider || !verified || !validAuthorization()) return;
+        elements.send.disabled = true;
+        try {
+          const wallet = await ensureTestnet(provider);
+          if (wallet.account !== prepared.from) {
+            throw new Error("发送前核验失败：钱包地址已经改变。");
+          }
+          setStatus("等待你在 Bitget Wallet 中核对并确认交易……");
+          const transactionHash = await provider.request({
+            method: "eth_sendTransaction",
+            params: [{
+              chainId: prepared.chainId,
+              from: prepared.from,
+              to: prepared.token,
+              value: "0x0",
+              data: prepared.data
+            }]
+          });
+          if (!/^0x[0-9a-fA-F]{64}$/.test(String(transactionHash))) {
+            throw new Error("钱包没有返回有效的交易哈希。");
+          }
+          elements.hash.textContent = transactionHash;
+          elements.explorer.href = `https://testnet.bscscan.com/tx/${transactionHash}`;
+          elements.result.style.display = "block";
+          setStatus("测试交易已提交。请保留本页，随后由 Luvion 独立核验回执。", "ok");
+        } catch (error) {
+          setStatus(error?.message || String(error), "error");
+          syncSend();
+        }
+      });
+
+      syncSend();
+    </script>
+  </body>
+</html>

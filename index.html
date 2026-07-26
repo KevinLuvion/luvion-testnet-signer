@@ -149,6 +149,7 @@
         <p class="step-copy">授权编号用于把链上结果与审批证据对应；没有有效编号时不能发送。</p>
         <label class="label" for="request">授权编号</label>
         <input id="request" placeholder="等待新的 64 位授权编号" spellcheck="false" autocapitalize="none">
+        <div id="expiry" class="status">等待授权有效期。</div>
 
         <div class="divider"></div>
 
@@ -189,6 +190,7 @@
         destination: document.querySelector("#destination"),
         token: document.querySelector("#token"),
         request: document.querySelector("#request"),
+        expiry: document.querySelector("#expiry"),
         status: document.querySelector("#status"),
         connect: document.querySelector("#connect"),
         send: document.querySelector("#send"),
@@ -200,17 +202,45 @@
       elements.from.textContent = prepared.from;
       elements.destination.textContent = prepared.destination;
       elements.token.textContent = prepared.token;
-      elements.request.value = new URLSearchParams(location.search).get("request")?.trim() || "";
+      const query = new URLSearchParams(location.search);
+      elements.request.value = query.get("request")?.trim() || "";
+      const expiresAtUnixS = Number(query.get("expires"));
 
       let provider = null;
       let verified = false;
 
+      function secondsUntilExpiry() {
+        if (!Number.isSafeInteger(expiresAtUnixS) || expiresAtUnixS <= 0) return -1;
+        return expiresAtUnixS - Math.floor(Date.now() / 1000);
+      }
+
       function validAuthorization() {
-        return /^(0x)?[0-9a-fA-F]{64}$/.test(elements.request.value.trim());
+        return /^(0x)?[0-9a-fA-F]{64}$/.test(elements.request.value.trim())
+          && secondsUntilExpiry() > 60;
       }
 
       function syncSend() {
         elements.send.disabled = !(provider && verified && validAuthorization());
+      }
+
+      function updateExpiry() {
+        const remaining = secondsUntilExpiry();
+        if (remaining < 0) {
+          elements.expiry.className = "status error";
+          elements.expiry.textContent = "链接缺少有效的授权截止时间，不能发送。";
+        } else if (remaining <= 60) {
+          elements.expiry.className = "status error";
+          elements.expiry.textContent = remaining <= 0
+            ? "授权已过期，不能发送。请获取新的 Luvion 授权链接。"
+            : `授权仅剩 ${remaining} 秒，已停止发起交易。请获取新的授权链接。`;
+        } else {
+          const minutes = Math.floor(remaining / 60);
+          const seconds = remaining % 60;
+          elements.expiry.className = "status ok";
+          elements.expiry.textContent =
+            `授权剩余 ${minutes}:${String(seconds).padStart(2, "0")}；截止 ${new Date(expiresAtUnixS * 1000).toLocaleString()}。`;
+        }
+        syncSend();
       }
 
       function setStatus(message, kind = "") {
@@ -301,6 +331,9 @@
           if (wallet.account !== prepared.from) {
             throw new Error("发送前核验失败：钱包地址已经改变。");
           }
+          if (!validAuthorization()) {
+            throw new Error("授权已经过期或剩余不足 60 秒，请获取新的授权链接。");
+          }
           setStatus("等待你在 Bitget Wallet 中核对并确认交易……");
           const transactionHash = await provider.request({
             method: "eth_sendTransaction",
@@ -326,6 +359,8 @@
       });
 
       syncSend();
+      updateExpiry();
+      window.setInterval(updateExpiry, 1000);
     </script>
   </body>
 </html>
